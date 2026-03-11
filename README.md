@@ -77,10 +77,23 @@ This "double patching" was harmless and ensured ESM consumers always got instrum
 
 ## Suggested fix
 
-The guard should either be removed, or CJS and ESM patching should be tracked independently (e.g. separate `_httpPatchedCjs` / `_httpPatchedEsm` flags), since they operate on different objects:
+The `_httpPatched` guard was added in [#6437](https://github.com/open-telemetry/opentelemetry-js/pull/6437) to fix double spans ([#6428](https://github.com/open-telemetry/opentelemetry-js/issues/6428)) when both RITM and IITM patch the same shared module object. That fix is correct for that case. But when the IITM proxy holds stale snapshot values (a different object), the ESM proxy genuinely needs its own patching.
 
-- CJS: patches the `module.exports` object directly
-- ESM: patches the IITM proxy namespace (a separate object with snapshot values)
+Instead of a boolean flag, the guard could compare the `moduleExports` object identity:
+
+```js
+// Current (breaks ESM when proxy has stale snapshots):
+if (this._httpPatched) { return moduleExports; }
+this._httpPatched = true;
+
+// Proposed (skips only if it's the exact same object):
+if (this._httpPatchedExports === moduleExports) { return moduleExports; }
+this._httpPatchedExports = moduleExports;
+```
+
+This way:
+- **Same object** (the double-span case from #6428): skip — already patched, no double spans
+- **Different object** (IITM proxy with stale snapshots): patch it — it's a separate object that needs independent instrumentation
 
 ## Environment
 
