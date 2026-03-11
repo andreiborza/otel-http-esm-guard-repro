@@ -1,0 +1,59 @@
+diff --git a/node_modules/@opentelemetry/instrumentation-http/build/src/http.js b/node_modules/@opentelemetry/instrumentation-http/build/src/http.js
+index 51f7239..dc95f3f 100644
+--- a/node_modules/@opentelemetry/instrumentation-http/build/src/http.js
++++ b/node_modules/@opentelemetry/instrumentation-http/build/src/http.js
+@@ -20,8 +20,8 @@ class HttpInstrumentation extends instrumentation_1.InstrumentationBase {
+     /** keep track on spans not ended */
+     _spanNotEnded = new WeakSet();
+     _headerCapture;
+-    _httpPatched = false;
+-    _httpsPatched = false;
++    _httpPatchedExports = undefined;
++    _httpsPatchedExports = undefined;
+     _semconvStability = instrumentation_1.SemconvStability.OLD;
+     constructor(config = {}) {
+         super('@opentelemetry/instrumentation-http', version_1.VERSION, config);
+@@ -93,10 +93,10 @@ class HttpInstrumentation extends instrumentation_1.InstrumentationBase {
+         return new instrumentation_1.InstrumentationNodeModuleDefinition('http', ['*'], (moduleExports) => {
+             // Guard against double-instrumentation, if loaded by both `require`
+             // and `import`.
+-            if (this._httpPatched) {
++            if (this._httpPatchedExports === moduleExports) {
+                 return moduleExports;
+             }
+-            this._httpPatched = true;
++            this._httpPatchedExports = moduleExports;
+             // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             const isESM = moduleExports[Symbol.toStringTag] === 'Module';
+             if (!this.getConfig().disableOutgoingRequestInstrumentation) {
+@@ -116,7 +116,7 @@ class HttpInstrumentation extends instrumentation_1.InstrumentationBase {
+             }
+             return moduleExports;
+         }, (moduleExports) => {
+-            this._httpPatched = false;
++            this._httpPatchedExports = undefined;
+             if (moduleExports === undefined)
+                 return;
+             if (!this.getConfig().disableOutgoingRequestInstrumentation) {
+@@ -132,10 +132,10 @@ class HttpInstrumentation extends instrumentation_1.InstrumentationBase {
+         return new instrumentation_1.InstrumentationNodeModuleDefinition('https', ['*'], (moduleExports) => {
+             // Guard against double-instrumentation, if loaded by both `require`
+             // and `import`.
+-            if (this._httpsPatched) {
++            if (this._httpsPatchedExports === moduleExports) {
+                 return moduleExports;
+             }
+-            this._httpsPatched = true;
++            this._httpsPatchedExports = moduleExports;
+             // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             const isESM = moduleExports[Symbol.toStringTag] === 'Module';
+             if (!this.getConfig().disableOutgoingRequestInstrumentation) {
+@@ -155,7 +155,7 @@ class HttpInstrumentation extends instrumentation_1.InstrumentationBase {
+             }
+             return moduleExports;
+         }, (moduleExports) => {
+-            this._httpsPatched = false;
++            this._httpsPatchedExports = undefined;
+             if (moduleExports === undefined)
+                 return;
+             if (!this.getConfig().disableOutgoingRequestInstrumentation) {

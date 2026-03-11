@@ -17,6 +17,9 @@ npm run start:213
 
 # @opentelemetry/instrumentation-http@0.212.0 — PASS (client span created)
 npm run start:212
+
+# @opentelemetry/instrumentation-http@0.213.0 with proposed fix — PASS (client span created)
+npm run start:213-patched
 ```
 
 **0.213.0 output (broken):**
@@ -41,6 +44,31 @@ PASS: ESM http.request is instrumented — client span created
   GET http://example.com/
   200 OK
 ```
+
+**0.213.0-patched output (working — both ESM and CJS):**
+```
+=== ESM handler ===
+Total spans: 2
+  [CLIENT] GET
+  [INTERNAL] test-invoke
+
+PASS: ESM http.request is instrumented — client span created
+  Client span:
+  GET http://example.com/
+  200 OK
+
+=== CJS handler ===
+Total spans: 2
+  [CLIENT] GET
+  [INTERNAL] test-invoke
+
+PASS: CJS http.request produces exactly 1 client span (no double spans)
+  Client span:
+  GET http://example.com/
+  200 OK
+```
+
+The `start:213-patched` script runs both an ESM handler (`index.mjs`) and a CJS handler (`index-cjs.cjs`). The CJS handler verifies that the proposed fix still prevents double spans — the original problem from [#6428](https://github.com/open-telemetry/opentelemetry-js/issues/6428). In a CJS handler, RITM and IITM both see the **same** `http` module object, so `_httpPatchedExports === moduleExports` is `true` on the second call and the guard correctly skips re-patching. The test asserts exactly 1 client span — if the guard failed, there would be 2.
 
 ## The problem
 
@@ -94,6 +122,8 @@ this._httpPatchedExports = moduleExports;
 This way:
 - **Same object** (the double-span case from #6428): skip — already patched, no double spans
 - **Different object** (IITM proxy with stale snapshots): patch it — it's a separate object that needs independent instrumentation
+
+Run `npm run start:213-patched` to verify — it applies this fix via [`patches/`](./patches/@opentelemetry+instrumentation-http+0.213.0.patch) and produces a client span.
 
 ## Environment
 

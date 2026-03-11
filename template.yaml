@@ -17,3 +17,12 @@ Resources:
       Environment:
         Variables:
           NODE_OPTIONS: '--import ./setup.mjs'
+
+  OtelCjsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index-cjs.handler
+      CodeUri: .
+      Environment:
+        Variables:
+          NODE_OPTIONS: '--import ./setup.mjs'
