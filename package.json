@@ -1,0 +1,17 @@
+{
+  "name": "otel-http-esm-lambda-repro",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start:212": "npm install --save @opentelemetry/instrumentation@0.212.0 @opentelemetry/instrumentation-http@0.212.0 && sam build && sam local invoke OtelEsmFunction --no-event --skip-pull-image",
+    "start:213": "npm install --save @opentelemetry/instrumentation@0.213.0 @opentelemetry/instrumentation-http@0.213.0 && sam build && sam local invoke OtelEsmFunction --no-event --skip-pull-image"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/instrumentation": "^0.212.0",
+    "@opentelemetry/instrumentation-http": "^0.212.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.0",
+    "@opentelemetry/sdk-trace-node": "^2.0.0"
+  }
+}
